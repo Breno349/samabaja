@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Nova Ordem de Serviço" if not ordem else "Editar Ordem " + ordem.id|string }} - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+    <h2>{{ "Criar Nova Ordem de Serviço" if not ordem else "Editar Ordem de Serviço #" + ordem.id|string }}</h2>
+
+    {# Inspired by the second image provided by the user #}
+    <form method="post" style="display: flex; gap: 20px;">
+        {# Left Column #}
+        <div style="flex: 1;">
+            <div>
+                <label for="titulo">Título:</label><br>
+                <input type="text" id="titulo" name="titulo" required style="width: 95%;" value="{{ ordem.titulo if ordem else "" }}">
+            </div>
+            <br>
+            <div>
+                <label for="setor_responsavel">Setor Responsável:</label><br>
+                <select id="setor_responsavel" name="setor_responsavel" required style="width: 95%;">
+                    <option value="">Selecione...</option>
+                    {% for setor in setores %}
+                        <option value="{{ setor }}" {{ "selected" if ordem and ordem.setor_responsavel.name == setor else "" }}>{{ setor }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <br>
+            {# Add Responsável dropdown later if needed #}
+            <div>
+                <label for="descricao_resumida">Descrição Resumida:</label><br>
+                <textarea id="descricao_resumida" name="descricao_resumida" rows="3" style="width: 95%;">{{ ordem.descricao_resumida if ordem else "" }}</textarea>
+            </div>
+            <br>
+            <div>
+                <label for="descricao_detalhada">Descrição Detalhada:</label><br>
+                <textarea id="descricao_detalhada" name="descricao_detalhada" rows="6" style="width: 95%;">{{ ordem.descricao_detalhada if ordem else "" }}</textarea>
+            </div>
+        </div>
+
+        {# Right Column #}
+        <div style="flex: 1;">
+             <div>
+                <label for="data_prevista_conclusao">Data Prevista Conclusão:</label><br>
+                <input type="date" id="data_prevista_conclusao" name="data_prevista_conclusao" style="width: 95%;" value="{{ ordem.data_prevista_conclusao.strftime("%Y-%m-%d") if ordem and ordem.data_prevista_conclusao else "" }}">
+            </div>
+            <br>
+            <div>
+                <label for="materiais_necessarios">Materiais Necessários:</label><br>
+                <textarea id="materiais_necessarios" name="materiais_necessarios" rows="3" style="width: 95%;">{{ ordem.materiais_necessarios if ordem else "" }}</textarea>
+            </div>
+             <br>
+            <div>
+                <label for="materiais_indiretos">Materiais Indiretos:</label><br>
+                <textarea id="materiais_indiretos" name="materiais_indiretos" rows="3" style="width: 95%;">{{ ordem.materiais_indiretos if ordem else "" }}</textarea>
+            </div>
+            <br>
+            <div>
+                <label for="equipamentos_ferramentas">Equipamentos / Ferramentas:</label><br>
+                <textarea id="equipamentos_ferramentas" name="equipamentos_ferramentas" rows="3" style="width: 95%;">{{ ordem.equipamentos_ferramentas if ordem else "" }}</textarea>
+            </div>
+            <br>
+            <div>
+                <label for="epis">EPIs:</label><br>
+                <textarea id="epis" name="epis" rows="2" style="width: 95%;">{{ ordem.epis if ordem else "" }}</textarea>
+            </div>
+            <br>
+            <div>
+                <label for="anexos_link">Anexos (Link Drive):</label><br>
+                <input type="url" id="anexos_link" name="anexos_link" style="width: 95%;" value="{{ ordem.anexos_link if ordem else "" }}">
+            </div>
+            <br>
+            <div>
+                <label for="observacoes">Observações:</label><br>
+                <textarea id="observacoes" name="observacoes" rows="3" style="width: 95%;">{{ ordem.observacoes if ordem else "" }}</textarea>
+            </div>
+            <br>
+            <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">{{ "Criar Ordem" if not ordem else "Salvar Alterações" }}</button>
+            <a href="{{ url_for("ordem.listar_ordens") }}" style="margin-left: 10px;">Cancelar</a>
+        </div>
+    </form>
+{% endblock %}
+

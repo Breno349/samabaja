@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Usuários - Admin - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+    <h2 style="text-align: center; margin-bottom: 1rem;">Gerenciar Usuários</h2>
+
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">⬅ Voltar ao Dashboard Admin</a>
+    </div>
+
+    <table style="
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+        font-family: Arial, sans-serif;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        table-layout: fixed;
+    ">
+        <thead style="background-color: #007BFF; color: white;">
+            <tr>
+                <th style="padding: 10px; width: 15%;">Usuário</th>
+                <th style="padding: 10px; width: 20%;">Email</th>
+                <th style="padding: 10px; width: 15%;">Cargo</th>
+                <th style="padding: 10px; width: 20%;">Setor</th>
+                <th style="padding: 10px; width: 10%;">Status</th>
+                <th style="padding: 10px; width: 20%;">Ações</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for user in users %}
+                <tr style="background-color: {% if loop.index is even %}#f9f9f9{% else %}#ffffff{% endif %};">
+                    <td style="padding: 8px; display: flex; align-items: center; gap: 8px; justify-content: center;">
+                        {% if user.profile_picture %}
+                            <img src="{{ url_for('static', filename=user.profile_picture) }}" alt="Foto" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='uploads/default_user.png') }}" alt="Foto" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                        {% endif %}
+                        {{ user.username }}
+                    </td>
+
+                    <td style="padding: 8px;">{{ user.email }}</td>
+
+                    <td style="padding: 8px;">
+                        <form method="post" action="{{ url_for('admin.update_role_sector', user_id=user.id) }}" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            {% if user.role == UserRole.ADMIN %}
+                                <input type="text" value="{{ user.role.value }}" readonly style="border: none; background: transparent; text-align: center; font-weight: bold;">
+                            {% else %}
+                                <select name="role" style="padding: 4px; font-size: 0.9em; border-radius: 5px;">
+                                    {% for role in roles %}
+                                        <option value="{{ role.name }}" {{ "selected" if user.role == role else "" }}>
+                                            {{ role.value }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
+                    </td>
+
+                    <td style="padding: 8px;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            {% if user.role == UserRole.ADMIN %}
+                                <input type="text" value="{{ user.sector.value if user.sector else '—' }}" readonly style="border: none; background: transparent; text-align: center; font-weight: bold;">
+                            {% else %}
+                                <select name="sector" style="padding: 4px; font-size: 0.9em; border-radius: 5px;">
+                                    {% for sector in sectors %}
+                                        <option value="{{ sector.name }}" {{ "selected" if user.sector == sector else "" }}>
+                                            {{ sector.value }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
+
+                            {% if user.role != UserRole.ADMIN %}
+                                <button type="submit" style="
+                                    padding: 4px 8px;
+                                    font-size: 0.85em;
+                                    background-color: #28a745;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 5px;
+                                    cursor: pointer;
+                                ">Salvar</button>
+                            {% endif %}
+                        </div>
+                        </form>
+                    </td>
+
+                    <td style="padding: 8px;">
+                        {{ "Ativo" if user.is_active else ("Solicitado" if user.role == UserRole.PENDING else "Inativo") }}
+                    </td>
+
+                    <td style="padding: 8px;">
+                        {% if user.role == UserRole.PENDING and not user.is_active %}
+                            <form method="post" action="{{ url_for('admin.approve_user', user_id=user.id) }}" style="display: inline;">
+                                <button type="submit" style="
+                                    padding: 4px 8px;
+                                    background-color: #17a2b8;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 5px;
+                                    cursor: pointer;
+                                ">Aprovar</button>
+                            </form>
+                        {% endif %}
+
+                        {% if user.id != current_user.id and user.role != UserRole.GESTAO %}
+                            <form method="post" action="{{ url_for('admin.toggle_active', user_id=user.id) }}" style="display: inline;">
+                                <button type="submit" style="
+                                    padding: 4px 8px;
+                                    background-color: {% if user.is_active %}#dc3545{% else %}#007BFF{% endif %};
+                                    color: white;
+                                    border: none;
+                                    border-radius: 5px;
+                                    cursor: pointer;
+                                ">{{ "Desativar" if user.is_active else "Ativar" }}</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" style="padding: 12px; text-align: center;">
+                        Nenhum usuário encontrado.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

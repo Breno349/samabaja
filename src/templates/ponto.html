@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Ponto Eletrônico - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>⏱️ Ponto Eletrônico</h1>
+
+<div style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+    <a href="{{ url_for('user.dashboard') }}#meu-horario" class="btn btn-secondary">
+        ⏰ Meu Horário de Trabalho
+    </a>
+</div>
+
+        
+        <div class="row">
+            <!-- Left Column: Clock In/Out -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Registrar Ponto</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="real-time-clock" style="font-size: 3em; text-align: center; margin-bottom: 1.5rem; font-weight: bold; color: var(--primary-color);">
+                            {{ current_time }}
+                        </div>
+
+                        {% if today_schedule %}
+                            <div style="background-color: #e7f3ff; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid var(--primary-color);">
+                                <p style="margin: 0; font-weight: bold; color: var(--primary-color);">📅 Horário de Hoje</p>
+                                <p style="margin: 0.5rem 0 0 0; color: #333; font-size: 1.1em;">
+                                    {{ today_schedule.inicio }} - {{ today_schedule.fim }}
+                                </p>
+                            </div>
+                        {% else %}
+                            <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid #999;">
+                                <p style="margin: 0; font-weight: bold; color: #666;">📅 Sem Horário Definido</p>
+                                <p style="margin: 0.5rem 0 0 0; color: #999; font-size: 0.9em;">
+                                    <a href="{{ url_for('ponto.set_schedule') }}" style="color: var(--primary-color); font-weight: bold;">Clique aqui para configurar</a>
+                                </p>
+                            </div>
+                        {% endif %}
+
+                        <form method="post" style="margin-bottom: 1rem;">
+                            {% if is_clocked_in %}
+                                <button type="submit" name="action" value="clock_out" class="btn btn-danger btn-block">
+                                    🛑 Registrar Saída
+                                </button>
+                            {% else %}
+                                <button type="submit" name="action" value="clock_in" class="btn btn-success btn-block">
+                                    ✓ Registrar Entrada
+                                </button>
+                            {% endif %}
+                        </form>
+
+                        <hr style="margin: 1rem 0;">
+
+                        <div style="background-color: #f5f5f5; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid var(--success-color);">
+                            <p style="margin: 0; font-weight: bold; color: #333;">⏱️ Horas Trabalhadas</p>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 1.5em; color: var(--success-color); font-weight: bold;">
+                                {{ total_hours_worked }}
+                            </p>
+                        </div>
+
+                        <hr style="margin: 1rem 0;">
+
+                        <h4 style="margin-bottom: 1rem;">🚨 Registrar Ocorrência</h4>
+                        <form method="post">
+                            <textarea 
+                                name="occurrence_description" 
+                                placeholder="Descreva a ocorrência..."
+                                style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; font-family: Arial, sans-serif; margin-bottom: 0.5rem; resize: vertical; min-height: 80px;"
+                            ></textarea>
+                            <button type="submit" name="action" value="register_occurrence" class="btn btn-warning btn-block">
+                                ⚠️ Registrar Ocorrência
+                            </button>
+                        </form>
+
+                        <hr style="margin: 1rem 0;">
+
+                        <a href="{{ url_for('ordem.listar_ordens') }}" class="btn btn-secondary btn-block">
+                            📋 Consultar Ordens
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: History/Info -->
+            <div class="col-md-8">
+                <!-- Recent Time Entries -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h3>Histórico Recente de Ponto</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if time_entries %}
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                {% for entry in time_entries %}
+                                    <div style="border-bottom: 1px solid #eee; padding: 0.75rem 0;">
+                                        {% if entry.entry_type.value == 'entrada' %}
+                                            <span style="color: var(--success-color); font-weight: bold; font-size: 1.2em;">✓</span>
+                                        {% elif entry.entry_type.value == 'saida' %}
+                                            <span style="color: var(--danger-color); font-weight: bold; font-size: 1.2em;">✗</span>
+                                        {% else %}
+                                            <span style="color: var(--warning-color); font-weight: bold; font-size: 1.2em;">⚠️</span>
+                                        {% endif %}
+                                        
+                                        <span style="font-weight: bold;">{{ entry.start_time.strftime("%d/%m/%Y %H:%M") }}</span>
+                                        
+                                        {% if entry.end_time %}
+                                            - {{ entry.end_time.strftime("%H:%M") }}
+                                            <span style="color: #666; font-size: 0.9em;">({{ entry.format_duration() }})</span>
+                                        {% else %}
+                                            <span style="color: var(--success-color); font-weight: bold;">Em andamento</span>
+                                        {% endif %}
+                                        
+                                        {% if entry.registered_by %}
+                                            <p style="margin: 0.25rem 0 0 0; color: #999; font-size: 0.85em;">👤 Registrado por: <strong>{{ entry.registered_by.username }}</strong></p>
+                                        {% endif %}
+                                        
+                                        {% if entry.description %}
+                                            <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.9em;">{{ entry.description }}</p>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p style="color: #999; text-align: center;">Nenhum registro de ponto encontrado.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Open Orders -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h3>Ordens de Serviço Abertas</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if open_orders %}
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                {% for ordem in open_orders %}
+                                    <li style="border-bottom: 1px solid #eee; padding: 0.75rem 0;">
+                                        <a href="{{ url_for('ordem.ver_ordem', ordem_id=ordem.id) }}" style="text-decoration: none; color: var(--primary-color); font-weight: bold;">
+                                            #{{ ordem.id }}: {{ ordem.titulo }}
+                                        </a>
+                                        <br>
+                                        <small style="color: #666;">
+                                            {{ ordem.setor_responsavel.value }} - 
+                                            <span class="badge" style="background-color: var(--secondary-color); color: white;">
+                                                {{ ordem.status.value }}
+                                            </span>
+                                        </small>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <a href="{{ url_for('ordem.listar_ordens') }}" style="color: var(--primary-color); text-decoration: none; font-weight: bold;">Ver todas...</a>
+                        {% else %}
+                            <p style="color: #999; text-align: center;">Nenhuma ordem de serviço aberta encontrada.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Occurrences -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🚨 Alertas de Ocorrências</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if all_occurrences %}
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                {% for occ in all_occurrences %}
+                                    <div style="background-color: #f8d7da; padding: 0.75rem; border-radius: 4px; margin-bottom: 0.75rem; border-left: 4px solid var(--danger-color);">
+                                        <p style="margin: 0; font-weight: bold; color: var(--danger-color);">⚠️ {{ occ.user.username }}</p>
+                                        <p style="margin: 0.25rem 0; color: #333; font-size: 0.95em;">{{ occ.description }}</p>
+                                        <small style="color: #666;">
+                                            {{ occ.start_time.strftime("%d/%m/%Y %H:%M") }}
+                                            {% if occ.registered_by %}
+                                                - Registrada por {{ occ.registered_by.username }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p style="color: #999; text-align: center;">Nenhuma ocorrência registrada.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const clockElement = document.getElementById("real-time-clock");
+            if (clockElement) {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, "0");
+                const minutes = String(now.getMinutes()).padStart(2, "0");
+                const seconds = String(now.getSeconds()).padStart(2, "0");
+                clockElement.textContent = `${hours}:${minutes}:${seconds}`;
+            }
+        }
+        
+        // Atualizar o relógio a cada segundo
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+
+{% endblock %}

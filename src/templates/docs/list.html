@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Documentos - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+    <h2>Documentos</h2>
+    <a href="{{ url_for("docs.new_document") }}" style="margin-bottom: 1em; display: inline-block; padding: 8px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Criar Novo Documento</a>
+
+    {% if documents %}
+        <table border="1" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Criador</th>
+                    <th>Última Atualização</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                    <tr>
+                        <td><a href="{{ url_for("docs.view_document", doc_id=doc.id) }}">{{ doc.title }}</a></td>
+                        <td>{{ doc.creator.username }}</td>
+                        <td>{{ doc.updated_at.strftime("%d/%m/%Y %H:%M") }}</td>
+                        <td>
+                            <a href="{{ url_for("docs.view_document", doc_id=doc.id) }}">Ver</a>
+                            {% if can_edit_doc(doc) %}
+                                | <a href="{{ url_for("docs.edit_document", doc_id=doc.id) }}">Editar</a>
+                                {# Add delete link/button later #}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhum documento encontrado.</p>
+    {% endif %}
+{% endblock %}
+

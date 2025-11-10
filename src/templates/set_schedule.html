@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Definir Horário de Trabalho - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+    <div class="container" style="max-width: 800px;">
+        <h1>⏰ Definir Horário de Trabalho</h1>
+        <p style="color: #666; margin-bottom: 2rem;">
+            Configure seus horários de trabalho para cada dia da semana.
+            <br>
+            <small style="color: #999;">Deixe os campos em branco para os dias em que você não trabalha.</small>
+        </p>
+
+        <form method="POST" style="background-color: #f9f9f9; padding: 2rem; border-radius: 8px;">
+            {% set days = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'] %}
+            {% set days_pt = {'segunda': 'Segunda-feira', 'terca': 'Terça-feira', 'quarta': 'Quarta-feira', 'quinta': 'Quinta-feira', 'sexta': 'Sexta-feira', 'sabado': 'Sábado', 'domingo': 'Domingo'} %}
+            
+            {% for day in days %}
+                <div style="margin-bottom: 1.5rem; padding: 1rem; background-color: white; border-radius: 4px; border-left: 4px solid var(--secondary-color);">
+                    <h3 style="margin-top: 0; color: var(--secondary-color);">{{ days_pt[day] }}</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label for="{{ day }}_inicio" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Horário de Início</label>
+                            <input 
+                                type="time" 
+                                id="{{ day }}_inicio" 
+                                name="{{ day }}_inicio"
+                                value="{% if current_schedule and current_schedule[day] %}{{ current_schedule[day].inicio }}{% endif %}"
+                            >
+                        </div>
+                        
+                        <div>
+                            <label for="{{ day }}_fim" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Horário de Término</label>
+                            <input 
+                                type="time" 
+                                id="{{ day }}_fim" 
+                                name="{{ day }}_fim"
+                                value="{% if current_schedule and current_schedule[day] %}{{ current_schedule[day].fim }}{% endif %}"
+                            >
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <div style="margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 150px; padding: 0.75rem; font-size: 1rem;">
+                    💾 Salvar Horários
+                </button>
+                <a href="{{ url_for('ponto.registrar_ponto') }}" class="btn btn-secondary" style="flex: 1; min-width: 150px; padding: 0.75rem; font-size: 1rem; text-align: center; text-decoration: none;">
+                    ← Voltar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <style>
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            div[style*="display: flex"] {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+
+{% endblock %}

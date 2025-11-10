@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Novo Documento" if not doc else "Editar Documento" }} - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+    <h2>{{ "Criar Novo Documento" if not doc else "Editar Documento: " + doc.title }}</h2>
+
+    <form method="post">
+        <div style="margin-bottom: 1em;">
+            <label for="title">Título:</label><br>
+            <input type="text" id="title" name="title" required style="width: 95%; padding: 8px;" value="{{ title if title else (doc.title if doc else "") }}">
+        </div>
+        <div style="margin-bottom: 1em;">
+            <label for="content">Conteúdo (Markdown):</label><br>
+            <textarea id="content" name="content" rows="15" style="width: 95%; padding: 8px;">{{ content if content else (doc.content if doc else "") }}</textarea>
+            <small>Você pode usar a sintaxe <a href="https://www.markdownguide.org/basic-syntax/" target="_blank">Markdown</a> para formatar o texto.</small>
+        </div>
+        <div>
+            <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">{{ "Criar Documento" if not doc else "Salvar Alterações" }}</button>
+            <a href="{{ url_for("docs.list_documents") if not doc else url_for("docs.view_document", doc_id=doc.id) }}" style="margin-left: 10px;">Cancelar</a>
+        </div>
+    </form>
+
+{% endblock %}
+

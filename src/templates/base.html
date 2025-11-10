@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>{% block title %}Samabaja IFES SM{% endblock %}</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* 🔴 Estilo do ícone de pendentes no menu Admin */
+        .pending-badge {
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            padding: 0.25em 0.55em;
+            font-size: 0.75em;
+            margin-left: 6px;
+            font-weight: bold;
+            vertical-align: middle;
+            display: inline-block;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li class="navbar-logo">
+                <img src="{{ url_for('static', filename='img/logo-samabaja.png') }}" alt="Samabaja Logo">
+            </li>
+            <li><a href="{{ url_for('main.home') }}">Início</a></li>
+
+            {% if current_user.is_authenticated %}
+                {% if current_user.role == UserRole.GESTAO %}
+                    <li>
+                        <a href="{{ url_for('admin.dashboard') }}">
+                            Admin
+                            {% if pending_users and pending_users > 0 %}
+                                <span class="pending-badge">{{ pending_users }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li><a href="{{ url_for('user.dashboard') }}">Meu Painel</a></li>
+                <li><a href="{{ url_for('ponto.registrar_ponto') }}">Ponto Eletrônico</a></li>
+                <li><a href="{{ url_for('ordem.listar_ordens') }}">Ordens de Serviço</a></li>
+                <li><a href="{{ url_for('docs.list_documents') }}">Documentos</a></li>
+            {% endif %}
+
+<li class="user-info" style="display: flex; align-items: center; gap: 8px;">
+    {% if current_user.is_authenticated %}
+        {% if current_user.profile_picture %}
+            <img src="{{ url_for('static', filename=current_user.profile_picture) }}" 
+                 alt="Foto" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+        {% else %}
+            <img src="{{ url_for('static', filename='default_user.png') }}" 
+                 alt="Foto" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+        {% endif %}
+        <span>{{ current_user.username }}</span>
+        <a href="{{ url_for('auth.logout') }}">Logout</a>
+    {% else %}
+        <a href="{{ url_for('auth.login') }}">Login</a>
+        <a href="{{ url_for('auth.register') }}">Registrar</a>
+    {% endif %}
+</li>
+
+
+        </ul>
+    </nav>
+
+    <div class="content">
+        {# Mensagens flash #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category if category else 'info' }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer>
+        <p>&copy; {{ now().year }} Equipe Samabaja IFES Campus São Mateus</p>
+    </footer>
+</body>
+</html>

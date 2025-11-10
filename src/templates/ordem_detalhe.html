@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes Ordem #{{ ordem.id }} - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+    <h2>Detalhes da Ordem de Serviço #{{ ordem.id }}</h2>
+
+    {# Display order details, similar to the form but read-only #}
+    {# Add options to edit or change status later based on user role #}
+
+    <div style="display: flex; gap: 20px;">
+        {# Left Column #}
+        <div style="flex: 1;">
+            <p><strong>Título:</strong> {{ ordem.titulo }}</p>
+            <p><strong>Setor Responsável:</strong> {{ ordem.setor_responsavel.value }}</p>
+            <p><strong>Status:</strong> {{ ordem.status.value }}</p>
+            <p><strong>Criador:</strong> {{ ordem.criador.username }}</p> {# Assumes relationship loads username #}
+            <p><strong>Data Criação:</strong> {{ ordem.data_criacao.strftime("%d/%m/%Y %H:%M") }}</p>
+            <p><strong>Descrição Resumida:</strong><br>{{ ordem.descricao_resumida | nl2br }}</p>
+            <p><strong>Descrição Detalhada:</strong><br>{{ ordem.descricao_detalhada | nl2br }}</p>
+        </div>
+
+        {# Right Column #}
+        <div style="flex: 1;">
+            <p><strong>Data Prevista Conclusão:</strong> {{ ordem.data_prevista_conclusao.strftime("%d/%m/%Y") if ordem.data_prevista_conclusao else "N/A" }}</p>
+            <p><strong>Materiais Necessários:</strong><br>{{ ordem.materiais_necessarios | nl2br }}</p>
+            <p><strong>Materiais Indiretos:</strong><br>{{ ordem.materiais_indiretos | nl2br }}</p>
+            <p><strong>Equipamentos / Ferramentas:</strong><br>{{ ordem.equipamentos_ferramentas | nl2br }}</p>
+            <p><strong>EPIs:</strong><br>{{ ordem.epis | nl2br }}</p>
+            <p><strong>Anexos (Link):</strong> {% if ordem.anexos_link %}<a href="{{ ordem.anexos_link }}" target="_blank">{{ ordem.anexos_link }}</a>{% else %}N/A{% endif %}</p>
+            <p><strong>Observações:</strong><br>{{ ordem.observacoes | nl2br }}</p>
+        </div>
+    </div>
+
+    <hr>
+    {# Add buttons for actions like Edit, Change Status, etc. later #}
+    <a href="{{ url_for("ordem.listar_ordens") }}">Voltar para Lista</a>
+
+{% endblock %}
+

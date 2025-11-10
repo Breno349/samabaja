@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Painel - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+<div class="content">
+    <h1>Meu Painel</h1>
+    
+    <div class="row">
+        <!-- Coluna Esquerda: Foto e Informações -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    {% if current_user.profile_picture %}
+                        <img src="{{ url_for('static', filename=current_user.profile_picture) }}" alt="Foto de Perfil" class="profile-picture-large">
+                    {% else %}
+                        <div style="width: 120px; height: 120px; margin: 0 auto 1rem; background-color: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #999;">
+                            <span style="font-size: 3rem;">👤</span>
+                        </div>
+                    {% endif %}
+                    
+                    <h3 style="text-align: center; margin-bottom: 0.5rem;">{{ current_user.username }}</h3>
+                    <p style="text-align: center; color: #666; margin-bottom: 1.5rem;">{{ current_user.email }}</p>
+                    
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <p><strong>Função:</strong> {{ current_user.role.value }}</p>
+                        <p><strong>Setor:</strong> {{ current_user.sector.value }}</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('user.upload_profile_picture') }}" enctype="multipart/form-data">
+                        <input type="file" name="profile_picture" accept="image/*" style="margin-bottom: 0.5rem;">
+                        <button type="submit" class="btn btn-primary btn-block btn-sm">Atualizar Foto</button>
+                    </form>
+                    
+                    {% if current_user.profile_picture %}
+                        <form method="POST" action="{{ url_for('user.remove_profile_picture') }}" style="margin-top: 0.5rem;">
+                            <button type="submit" class="btn btn-danger btn-block btn-sm">Remover Foto</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Coluna Direita: Informações de Horas -->
+        <div class="col-md-8">
+            <!-- Card de Resumo de Horas -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Resumo de Horas</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="padding: 1rem; background-color: #f0f0f0; border-radius: 4px; border-left: 4px solid #007bff;">
+                            <p style="color: #666; margin-bottom: 0.5rem;">Horas Semanais Esperadas</p>
+                            <p style="font-size: 1.5rem; font-weight: bold; color: #007bff;">{{ current_user.format_hours(current_user.get_weekly_hours()) }}</p>
+                        </div>
+                        <div style="padding: 1rem; background-color: #f0f0f0; border-radius: 4px; border-left: 4px solid #28a745;">
+                            <p style="color: #666; margin-bottom: 0.5rem;">Horas Trabalhadas</p>
+                            <p style="font-size: 1.5rem; font-weight: bold; color: #28a745;">{{ current_user.format_hours(current_user.total_hours_worked) }}</p>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 1rem; background-color: #f0f0f0; border-radius: 4px; border-left: 4px solid #ffc107;">
+                        <p style="color: #666; margin-bottom: 0.5rem;">Banco de Horas</p>
+                        <p style="font-size: 1.5rem; font-weight: bold; color: {% if current_user.bank_of_hours >= 0 %}#28a745{% else %}#dc3545{% endif %};">
+                            {{ current_user.format_hours(current_user.bank_of_hours|abs) }}
+                            {% if current_user.bank_of_hours >= 0 %} restantes {% else %}a descontar{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card de Horário de Trabalho -->
+            <div id="meu-horario" lass="card">
+                <div class="card-header">
+                    <h3>Meu Horário de Trabalho</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('user.update_schedule') }}">
+                        {% set schedule = current_user.get_work_schedule() %}
+                        {% set days = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'] %}
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                            {% for day in days %}
+                                <div style="padding: 1rem; border: 1px solid #ddd; border-radius: 4px;">
+                                    <label style="font-weight: bold; text-transform: capitalize; display: block; margin-bottom: 0.75rem;">
+                                        {{ day }}
+                                    </label>
+                                    
+                                    <div style="margin-bottom: 0.5rem;">
+                                        <label style="font-weight: normal; font-size: 0.9rem;">Início</label>
+                                        <input type="time" name="{{ day }}_inicio" value="{{ schedule.get(day, {}).get('inicio', '') }}" style="margin-bottom: 0;">
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="font-weight: normal; font-size: 0.9rem;">Fim</label>
+                                        <input type="time" name="{{ day }}_fim" value="{{ schedule.get(day, {}).get('fim', '') }}" style="margin-bottom: 0;">
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="margin-top: 1.5rem; width: 100%;">Salvar Horário</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Card de Histórico Recente -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Histórico Recente</h3>
+                </div>
+                <div class="card-body">
+                    {% if current_user.time_entries %}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Hora</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in current_user.time_entries[-10:]|reverse %}
+                                    <tr>
+                                        <td>{{ entry.start_time.strftime('%d/%m/%Y') }}</td>
+                                        <td>
+                                            {% if entry.entry_type.value == 'entrada' %}
+                                                <span class="badge badge-success">Entrada</span>
+                                            {% elif entry.entry_type.value == 'saida' %}
+                                                <span class="badge badge-danger">Saída</span>
+                                            {% else %}
+                                                <span class="badge badge-warning">Ocorrência</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ entry.start_time.strftime('%H:%M:%S') }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p style="text-align: center; color: #999;">Nenhum registro de ponto ainda.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

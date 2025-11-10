@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+<h2>Painel Administrativo</h2>
+<p>Bem-vindo ao painel de administração, {{ current_user.username }}.</p>
+
+<div style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-info">
+        👥 Gerenciar Usuários 
+        {% if pending_users > 0 %}
+            <span style="background-color: #dc3545; color: white; border-radius: 12px; padding: 0.2em 0.6em; margin-left: 6px; font-weight: bold;">
+                {{ pending_users }}
+            </span>
+        {% endif %}
+    </a>
+
+    <a href="{{ url_for('ponto.historico_horas') }}" class="btn btn-info">
+        📊 Ver Histórico de Horas (Admin)
+    </a>
+</div>
+
+{% endblock %}

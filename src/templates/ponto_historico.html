@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Histórico de Horas - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>📊 Histórico de Horas Trabalhadas</h1>
+        <p style="color: #666; margin-bottom: 2rem;">
+            Status em tempo real de todos os membros da equipe. 
+        </p>
+
+        <!-- 🔴 Botão de atalho para alertas -->
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <a href="#alerts" class="btn btn-danger" style="
+                background-color: #dc3545;
+                border: none;
+                padding: 10px 20px;
+                font-size: 1rem;
+                border-radius: 6px;
+                color: white;
+                text-decoration: none;
+                transition: background-color 0.2s;
+            ">
+                🚨 Ver Alertas
+            </a>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <div class="table-responsive">
+                <table class="table table-striped" id="users-table">
+                    <thead>
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Setor</th>
+                            <th>Status</th>
+                            <th>Horário de Hoje</th>
+                            <th>Horas Semanais</th>
+                            <th>Horas Trabalhadas</th>
+                            <th>Saldo de Horas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody">
+                        {% for data in users_data %}
+                            <tr class="user-row" data-user-id="{{ data.user.id }}">
+                                <td>
+                                    <strong>{{ data.user.username }}</strong>
+                                    <br>
+                                    <small style="color: #999;">{{ data.user.email }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge" style="background-color: var(--secondary-color); color: white;">
+                                        {{ data.user.sector.value }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ data.status.status }}" id="status-{{ data.user.id }}">
+                                        {% if data.status.status == 'trabalhando' %}
+                                            ✓ Trabalhando
+                                        {% elif data.status.status == 'nao_bateu' %}
+                                            ⚠️ Não bateu ponto
+                                        {% else %}
+                                            ⚪ Sem horário
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td id="schedule-{{ data.user.id }}">
+                                    {% if data.today_schedule %}
+                                        {{ data.today_schedule.inicio }} - {{ data.today_schedule.fim }}
+                                    {% else %}
+                                        <span style="color: #999;">Sem horário hoje</span>
+                                    {% endif %}
+                                </td>
+                                <td id="weekly-{{ data.user.id }}">
+                                    <strong style="color: var(--primary-color);">{{ data.weekly_hours }}</strong>
+                                </td>
+                                <td id="hours-{{ data.user.id }}">
+                                    <strong style="color: var(--success-color);">{{ data.total_hours }}</strong>
+                                </td>
+                                <td id="bank-{{ data.user.id }}">
+                                    {% if data.bank_of_hours.startswith('-') %}
+                                        <strong style="color: var(--danger-color);">{{ data.bank_of_hours }}</strong>
+                                    {% else %}
+                                        <strong style="color: var(--success-color);">+{{ data.bank_of_hours }}</strong>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <hr style="margin: 2rem 0;">
+
+        <!-- 🔗 Seção de Alertas -->
+        <h2 id="alerts">🚨 Alertas de Ocorrências</h2>
+        
+        {% if all_occurrences %}
+            <div class="occurrences-container" id="occurrences-container">
+                {% for occ in all_occurrences %}
+                    {% set is_today = occ.start_time.date() == now().date() %}
+                    <div class="occurrence-item" data-occurrence-id="{{ occ.id }}">
+                        <div style="background-color: #f8d7da; padding: 1rem; border-radius: 4px; border-left: 4px solid var(--danger-color); margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
+                                <div style="flex: 1; min-width: 200px;">
+                                    <h4 style="margin: 0; color: var(--danger-color);">⚠️ {{ occ.user.username }}</h4>
+                                    <p style="margin: 0.5rem 0; color: #333;">{{ occ.description }}</p>
+                                    <small style="color: #666;">
+                                        {{ occ.start_time.strftime("%d/%m/%Y às %H:%M") }}
+                                        {% if is_today %}<strong style="color: var(--danger-color);"> [Hoje]</strong>{% endif %}
+                                        {% if occ.registered_by %}
+                                            - Registrada por {{ occ.registered_by.username }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #999; text-align: center; padding: 2rem;">Nenhuma ocorrência registrada.</p>
+        {% endif %}
+
+        <div style="margin-top: 2rem; text-align: center;">
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('ponto.registrar_ponto') }}" class="btn btn-primary">
+                    ⏱️ Ir para Meu Ponto
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
+                    🔐 Fazer Login
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 768px) {
+            .table {
+                font-size: 0.85rem;
+            }
+
+            .table th,
+            .table td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .status-badge {
+                font-size: 0.8em;
+                padding: 0.4rem 0.8rem;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+
+<script>
+    // Atualiza status, horas e ocorrências
+    function updateStatusAndHours() {
+        fetch('{{ url_for("ponto.api_status") }}')
+            .then(response => response.json())
+            .then(data => {
+                let totalHoursAll = 0;
+                data.forEach(user => {
+                    const row = document.querySelector(`[data-user-id="${user.user_id}"]`);
+                    if (row) {
+                        // Atualiza badge de status
+                        const statusBadge = document.getElementById(`status-${user.user_id}`);
+                        if (statusBadge) {
+                            statusBadge.className = `status-badge status-${user.status}`;
+                            if (user.status === 'trabalhando') {
+                                statusBadge.textContent = '✓ Trabalhando';
+                            } else if (user.status === 'nao_bateu') {
+                                statusBadge.textContent = '⚠️ Não bateu ponto';
+                            } else {
+                                statusBadge.textContent = '⚪ Sem horário';
+                            }
+                        }
+
+                        // Atualiza horas individuais
+                        const hoursCell = document.getElementById(`hours-${user.user_id}`);
+                        if (hoursCell) {
+                            hoursCell.innerHTML = `<strong style="color: var(--success-color);">${user.total_hours}</strong>`;
+                        }
+
+                        // Acumula total de horas
+                        if (user.total_hours_float) { // Assumindo que o endpoint envia em float também
+                            totalHoursAll += user.total_hours_float;
+                        }
+                    }
+                });
+
+                // Atualiza saldo total de horas, se existir elemento
+                const totalHoursElement = document.getElementById('total-hours');
+                if (totalHoursElement) {
+                    totalHoursElement.innerHTML = `<strong style="color: var(--success-color);">${totalHoursAll.toFixed(2)}h</strong>`;
+                }
+            })
+            .catch(error => console.error('Erro ao atualizar status e horas:', error));
+    }
+
+    function updateOccurrences() {
+        fetch('{{ url_for("ponto.api_occurrences") }}')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('occurrences-container');
+                if (container) {
+                    container.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        container.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">Nenhuma ocorrência registrada.</p>';
+                    } else {
+                        const today = new Date().toLocaleDateString('pt-BR');
+                        data.forEach(occ => {
+                            const occDate = new Date(occ.start_time);
+                            const formattedDate = occDate.toLocaleDateString('pt-BR');
+                            const isToday = (formattedDate === today);
+                            const formattedTime = occDate.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+
+                            const occElement = document.createElement('div');
+                            occElement.className = 'occurrence-item';
+                            occElement.dataset.occurrenceId = occ.id;
+                            occElement.innerHTML = `
+                                <div style="background-color: #f8d7da; padding: 1rem; border-radius: 4px; border-left: 4px solid var(--danger-color); margin-bottom: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
+                                        <div style="flex: 1; min-width: 200px;">
+                                            <h4 style="margin: 0; color: var(--danger-color);">⚠️ ${occ.username}</h4>
+                                            <p style="margin: 0.5rem 0; color: #333;">${occ.description}</p>
+                                            <small style="color: #666;">
+                                                ${formattedDate} às ${formattedTime}
+                                                ${isToday ? '<strong style="color: var(--danger-color);"> [Hoje]</strong>' : ''}
+                                                - Registrada por ${occ.registered_by}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            container.appendChild(occElement);
+                        });
+                    }
+                }
+            })
+            .catch(error => console.error('Erro ao atualizar ocorrências:', error));
+    }
+
+    // Inicializa e define intervalo a cada 10 segundos
+    updateStatusAndHours();
+    updateOccurrences();
+    setInterval(updateStatusAndHours, 10000); // 10 segundos
+    setInterval(updateOccurrences, 10000);     // 10 segundos
+</script>
+
+{% endblock %}

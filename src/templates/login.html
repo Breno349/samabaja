@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <h1>🔐 Login</h1>
+    
+    <form method="post">
+        <div>
+            <label for="username">Usuário:</label>
+            <input type="text" id="username" name="username" required placeholder="Digite seu usuário">
+        </div>
+        
+        <div>
+            <label for="password">Senha:</label>
+            <input type="password" id="password" name="password" required placeholder="Digite sua senha">
+        </div>
+        
+        <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+            <input type="checkbox" id="remember" name="remember" style="width: auto; margin-right: 0.5rem; margin-bottom: 0;">
+            <label for="remember" style="margin-bottom: 0; font-weight: normal;">Lembrar-me neste dispositivo</label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-block" style="padding: 0.9rem; font-size: 1.05rem; margin-top: 1rem;">Entrar</button>
+    </form>
+    
+    <p style="text-align: center; margin-top: 1.5rem; color: #666;">
+        Não tem uma conta? <a href="{{ url_for('auth.register') }}">Registre-se aqui</a>
+    </p>
+</div>
+{% endblock %}

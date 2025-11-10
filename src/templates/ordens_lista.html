@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Ordens de Serviço - Samabaja IFES SM{% endblock %}
+
+{% block content %}
+    <h2>Ordens de Serviço</h2>
+    <a href="{{ url_for("ordem.nova_ordem") }}" style="margin-bottom: 1em; display: inline-block; padding: 8px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">Criar Nova Ordem</a>
+
+    {# Add filtering/sorting options later #}
+
+    {% if ordens %}
+        <table border="1" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Setor</th>
+                    <th>Status</th>
+                    <th>Data Criação</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ordem in ordens %}
+                    <tr>
+                        <td>{{ ordem.id }}</td>
+                        <td>{{ ordem.titulo }}</td>
+                        <td>{{ ordem.setor_responsavel.value }}</td>
+                        <td>{{ ordem.status.value }}</td>
+                        <td>{{ ordem.data_criacao.strftime("%d/%m/%Y") }}</td>
+                        <td><a href="{{ url_for("ordem.ver_ordem", ordem_id=ordem.id) }}">Ver Detalhes</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhuma ordem de serviço encontrada.</p>
+    {% endif %}
+{% endblock %}
+
